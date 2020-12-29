@@ -15,59 +15,200 @@
     <div id="app">
         <div>
             <!--Formulario de reservas   -->
-            <div class="container mt-2 mb-2">
-                <div class="card">
+            <div class="container p-0 my-2">
+                <div class="p-0 card">
                     <div class="card-body">
-                        <h5 class="card-title">Reserva</h5>
-                        <form class="form-inline">
+                        <h3 class="w-500 my-9" style="color: 036d5e;">{{titulo}}</h3>
+                        <div class="form-inline">
                             <div class="mb-2 form-group">
-                                <label for="staticEmail2" class="sr-only">Email</label>
-                                <input type="text" readonly class="form-control-plaintext" id="staticEmail2" value="email@example.com">
+                                <label for="input_nombre">Nombre</label>
+                                <input type="text" id="input_nombre" class="form-control" v-model="nuevoNombre">
                             </div>
-                            <div class="mb-2 form-group mx-sm-3">
-                                <label for="inputPassword2" class="sr-only">Password</label>
-                                <input type="password" class="form-control" id="inputPassword2" placeholder="Password">
+                            <div class="mb-2 form-group">
+                                <label for="input_fecha">Fecha</label>
+                                <input type="date" id="input_fecha" class="form-control" v-model="nuevaFecha">
                             </div>
-                            <button type="submit" class="mb-2 btn btn-primary">Confirm identity</button>
-                        </form>
+                            <div class="form-group">
+                                <label for="input_inicio">Desde</label>
+                                <input type="time" id="input_inico" class="form-control" v-model="nuevoInicio">
+                            </div>
+                            <div class="form-group">
+                                <label for="input_fin">Hasta</label>
+                                <input type="time" id="input_fin" class="form-control" v-model="nuevoFin">
+                            </div>
+                            <div class="form-group">
+                                <button @click="agregarReserva" class="btn btn-success">Guardar</button>
+                            </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <!--/Formulario de reservas    -->
+                <!--/Formulario de reservas    -->
 
-            <!-- Timeline -->
-            <div class="p-0 mt-2 mb-2 container-fluid">
-                <div class="border-0 card">
-                    <div class="card-body">
-                        <div id="visualization">
-                            <div class="menu">
-                                <input style="display:none;" id="sliderZoom" type="range" class="range" name="a" min="-1" max="1" step="0.1" value="0" />
-                                <i class="material-icons dp48 buttons-menu" id="fit">home</i>
-                                <i class="material-icons dp48 buttons-menu" id="moveLeft">arrow_back</i>
-                                <i class="material-icons dp48 buttons-menu" id="moveRight">arrow_forward</i>
+                <!-- Timeline -->
+                <div class="p-0 my-2 container-fluid">
+                    <div class="border-0 card">
+                        <div class="card-body">
+                            <div id="visualization">
+                                <div class="menu">
+                                    <input style="display:none;" id="sliderZoom" type="range" class="range" name="a" min="-1" max="1" step="0.1" value="0" />
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- /Timeline -->
+
+                <!-- table -->
+                <div class="container p-0 my-2">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Horario</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, index) in tareas" :key="index">
+                                <td>{{item.nombre}}</td>
+                                <td>de {{item.inicio}} a {{item.fin}}</td>
+                                <td><button class="btn btn-link" @click="eliminar(index)">x</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- /table -->
             </div>
-            <!-- /Timeline -->
-
-
         </div>
-    </div>
+
+        <!-- vue.js -->
+
+        <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+        <!-- /vue.js -->
+        <!-- My Js -->
+        <script src="node_modules/moment/moment.js"></script>
+        <script src="node_modules/vis/dist/vis.min.js"></script>
+        <script>
+            var app = new Vue({
 
 
-    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-    <script>
-        var app = new Vue({
-            el: '#app'
+                el: '#app',
+                data: {
+                    titulo: 'Reserva',
+                    tareas: [],
+                    nuevoNombre: '',
+                    nuevaFecha: '',
+                    nuevoInicio: '',
+                    nuevoFin: '',
+                },
+                methods: {
+                    agregarReserva: function() {
+                        this.tareas.push({
+                            nombre: this.nuevoNombre,
+                            fecha: this.nuevaFecha,
+                            inicio: this.nuevoInicio,
+                            fin: this.nuevoFin,
+                            estado: false
+                        });
 
-        });
-    </script>
-    <!-- My Js -->
-    <script src="node_modules/moment/moment.js"></script>
-    <script src="node_modules/vis/dist/vis.min.js"></script>
-    <script src="js/script.js"></script>
+                        this.nuevoNombre = '';
+                        this.nuevaFecha = '';
+                        this.nuevoInicio = '';
+                        this.nuevoFin = '';
+                        this.enviarBD();
+
+
+                    },
+
+                    eliminar: function(index) {
+                        this.tareas.splice(index, 1);
+                        this.enviarBD();
+                    },
+                    enviarBD: function() {
+                        localStorage.setItem('reservas-vue', JSON.stringify(this.tareas));
+                    },
+
+
+                },
+                created: function() {
+                    let datosDB = JSON.parse(localStorage.getItem('reservas-vue'));
+                    if (datosDB === null) {
+
+                        this.tareas = [];
+                    } else {
+                        this.tareas = datosDB;
+                    }
+                },
+
+            });
+            // create a timeline with some data
+            var container = document.getElementById("visualization");
+            var items = new vis.DataSet([{
+                id: 1,
+                content: "nombre",
+                start: "2019-03-1 10:00",
+                end: "2019-03-1 10:30"
+            }]);
+            var options = {
+                //stack: false,
+                orientation: {
+                    axis: "top",
+                    item: "top"
+                },
+                //zoomMax: 31536000000, // just one year
+                zoomMax: 87600900, // 10,000 years is maximum possible
+                zoomMin: 10000000 // 10ms
+            };
+            var timeline = new vis.Timeline(container, items, options);
+
+            /**
+             * Move the timeline a given percentage to left or right
+             * @param {Number} percentage   For example 0.1 (left) or -0.1 (right)
+             */
+            function move(percentage) {
+                var range = timeline.getWindow();
+                var interval = range.end - range.start;
+                timeline.setWindow({
+                    start: range.start.valueOf() - interval * percentage,
+                    end: range.end.valueOf() - interval * percentage
+                });
+            }
+
+            // attach events to the navigation buttons
+            // document.getElementById("moveLeft").onclick = function() {
+            //     move(0.2);
+            // };
+            // document.getElementById("moveRight").onclick = function() {
+            //     move(-0.2);
+            // };
+
+            // Using slider to zoomIn or zoomOut
+            document.getElementById("sliderZoom").addEventListener("input", function(e) {
+                var value = this.value;
+                if (value < 0) {
+                    var start = moment().year(moment().year() - 100000), // to adjust with options
+                        end = moment().year(moment().year() + 1);
+                    timeline.zoomOut(-value);
+                    if (value === "-1") timeline.setWindow(start, end);
+                } else if (value > 0) {
+                    var start = moment(),
+                        end = moment(moment().utc() + 10);
+                    timeline.zoomIn(value);
+                    if (value === "1") timeline.setWindow(start, end);
+                } else {
+                    timeline.fit(items.getIds());
+                    this.value = 0;
+                }
+            });
+
+            // To reset zoom initial state
+            // document.getElementById("fit").onclick = function() {
+            //     //$('.range').next().text('0'); // set default if to use output with input range
+            //     document.getElementById("sliderZoom").value = 0;
+            //     timeline.fit(items.getIds());
+            // };
+        </script>
 </body>
 
 </html>
